@@ -5,10 +5,13 @@ export default {
       label: 'Ссылка RSS',
       h1: 'RSS агрегатор',
       p: 'Начните читать RSS сегодня! Это легко, это красиво.',
+      feeds: 'Фиды',
+      posts: 'Посты',
     },
-    errors: {
+    messages: {
       invalidURL: 'Ссылка должна быть валидным URL',
       existsURL: 'RSS уже существует',
+      successURL: 'RSS успешно загружен',
     },
   },
 };

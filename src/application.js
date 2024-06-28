@@ -1,7 +1,10 @@
 import * as yup from 'yup';
 import i18n from 'i18next';
+import axios from 'axios';
+import { uniqueId } from 'lodash';
 import ru from './locales/ru';
 import view from './view';
+import parseData from './parser';
 
 export default () => {
   const state = {
@@ -9,9 +12,11 @@ export default () => {
       state: 'filling',
       valid: true,
       data: '',
-      error: '',
+      errors: '',
     },
     loadedURL: [],
+    feeds: [],
+    posts: [],
   };
 
   const i18nInstance = i18n.createInstance();
@@ -22,26 +27,39 @@ export default () => {
       resources: { ru },
     })
     .then(() => {
-      document.querySelector('.display-3').textContent =
-        i18nInstance.t('interface.h1');
-      document.querySelector('.lead').textContent =
-        i18nInstance.t('interface.p');
-      document.querySelector('label').textContent =
-        i18nInstance.t('interface.label');
-      document.querySelector('.col-auto > button').textContent =
-        i18nInstance.t('interface.button');
+      document.querySelector('.display-3').textContent = i18nInstance.t('interface.h1');
+      document.querySelector('.lead').textContent = i18nInstance.t('interface.p');
+      document.querySelector('label').textContent = i18nInstance.t('interface.label');
+      document.querySelector('.col-auto > button').textContent = i18nInstance.t('interface.button');
     });
 
-  const watchedState = view(state);
+  const watchedState = view(i18nInstance, state);
 
   yup.setLocale({
     mixed: {
-      notOneOf: i18nInstance.t('errors.existsURL'),
+      notOneOf: i18nInstance.t('messages.existsURL'),
     },
     string: {
-      url: i18nInstance.t('errors.invalidURL'),
+      url: i18nInstance.t('messages.invalidURL'),
     },
   });
+
+  const getURL = (link) => `https://allorigins.hexlet.app/get?disableCache=true&url=${link}`;
+
+  const getData = (link) => axios
+    .get(getURL(link))
+    .then((response) => parseData(response.data.contents));
+
+  const addFeedsAndPosts = (data, currState) => {
+    const feedId = uniqueId();
+    const { feedTitle, feedDescription, feedPosts } = data;
+    currState.feeds.unshift({
+      title: feedTitle,
+      description: feedDescription,
+      id: feedId,
+    });
+    currState.posts.unshift(...feedPosts);
+  };
 
   const schema = yup.string().required().url();
 
@@ -53,9 +71,18 @@ export default () => {
     schema
       .notOneOf(watchedState.loadedURL)
       .validate(url)
-      .then((validUrl) => watchedState.loadedURL.push(validUrl))
+      .then((validUrl) => {
+        getData(validUrl)
+          .then((loadedData) => {
+            addFeedsAndPosts(loadedData, watchedState);
+            watchedState.loadedURL.push(validUrl);
+          })
+          .catch((err) => {
+            watchedState.form.errors = err.message;
+          });
+      })
       .catch((err) => {
-        [watchedState.form.error] = err.errors;
+        [watchedState.form.errors] = err.errors;
       });
   });
 };
