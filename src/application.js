@@ -27,10 +27,14 @@ export default () => {
       resources: { ru },
     })
     .then(() => {
-      document.querySelector('.display-3').textContent = i18nInstance.t('interface.h1');
-      document.querySelector('.lead').textContent = i18nInstance.t('interface.p');
-      document.querySelector('label').textContent = i18nInstance.t('interface.label');
-      document.querySelector('.col-auto > button').textContent = i18nInstance.t('interface.button');
+      document.querySelector('.display-3').textContent =
+        i18nInstance.t('interface.h1');
+      document.querySelector('.lead').textContent =
+        i18nInstance.t('interface.p');
+      document.querySelector('label').textContent =
+        i18nInstance.t('interface.label');
+      document.querySelector('.col-auto > button').textContent =
+        i18nInstance.t('interface.button');
     });
 
   const watchedState = view(i18nInstance, state);
@@ -44,11 +48,13 @@ export default () => {
     },
   });
 
-  const getURL = (link) => `https://allorigins.hexlet.app/get?disableCache=true&url=${link}`;
+  const getURL = (link) =>
+    `https://allorigins.hexlet.app/get?disableCache=true&url=${link}`;
 
-  const getData = (link) => axios
-    .get(getURL(link))
-    .then((response) => parseData(response.data.contents));
+  const getData = (link) =>
+    axios
+      .get(getURL(link))
+      .then((response) => parseData(response.data.contents));
 
   const addFeedsAndPosts = (data, currState) => {
     const feedId = uniqueId();
@@ -59,6 +65,35 @@ export default () => {
       id: feedId,
     });
     currState.posts.unshift(...feedPosts);
+  };
+
+  const run = () => {
+    const links = state.loadedURL;
+    if (links.length !== 0) {
+      const titles = state.posts.map(({ title }) => title);
+
+      const initPromise = Promise.resolve([]);
+      const promise = links.reduce((acc, link) => {
+        const newAcc = acc.then((contents) =>
+          getData(link).then((data) => {
+            const allPosts = data.feedPosts;
+            return contents.concat(allPosts);
+          })
+        );
+        return newAcc;
+      }, initPromise);
+
+      promise
+        .then((data) => data.filter((post) => !titles.includes(post.title)))
+        .then((newPosts) => {
+          watchedState.posts.unshift(...newPosts);
+        });
+    }
+    setTimeout(run, 5000);
+  };
+
+  const updatePosts = () => {
+    setTimeout(run, 5000);
   };
 
   const schema = yup.string().required().url();
@@ -85,4 +120,6 @@ export default () => {
         [watchedState.form.errors] = err.errors;
       });
   });
+
+  updatePosts();
 };
