@@ -1,5 +1,11 @@
 import onChange from 'on-change';
 
+const setAttributes = (element, options) => {
+  Object.entries(options).forEach(([attr, value]) => {
+    element.setAttribute(attr, value);
+  });
+};
+
 const renderFeeds = (feeds) => {
   const ul = document.createElement('ul');
   ul.classList.add('list-group', 'border-0', 'rounded-0');
@@ -20,33 +26,25 @@ const renderFeeds = (feeds) => {
   return ul;
 };
 
-const renderPosts = (posts) => {
+const renderPosts = (posts, readPostsId) => {
   const ul = document.createElement('ul');
   ul.classList.add('list-group', 'border-0', 'rounded-0');
   const postsElements = posts.map((post) => {
     const { title, link, id } = post;
     const li = document.createElement('li');
-    li.classList.add(
-      'list-group-item',
-      'd-flex',
-      'justify-content-between',
-      'align-items-start',
-      'border-0',
-      'border-end-0',
-    );
+    li.classList.add('list-group-item', 'd-flex', 'justify-content-between');
+    li.classList.add('align-items-start', 'border-0', 'border-end-0');
     const a = document.createElement('a');
-    a.classList.add('fw-bold');
-    a.setAttribute('href', link);
-    a.setAttribute('data-id', id);
-    a.setAttribute('target', '_blank');
-    a.setAttribute('rel', 'noopener noreferrer');
+    a.classList.add(readPostsId.includes(id) ? 'fw-normal' : 'fw-bold');
+    setAttributes(a, {
+      href: link, 'data-id': id, target: '_blank', rel: 'noopener noreferrer',
+    });
     a.textContent = title;
     const button = document.createElement('button');
     button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-    button.setAttribute('type', 'button');
-    button.setAttribute('data-id', id);
-    button.setAttribute('data-bs-toggle', 'modal');
-    button.setAttribute('data-bs-target', '#modal');
+    setAttributes(button, {
+      type: 'button', 'data-id': id, 'data-bs-toggle': 'modal', 'data-bs-target': '#modal',
+    });
     button.textContent = 'Просмотр';
     li.append(a);
     li.append(button);
@@ -69,6 +67,21 @@ const renderCard = (title, content) => {
   return card;
 };
 
+const renderModal = (post, modalContainer) => {
+  const titleContainer = modalContainer.querySelector('.modal-title');
+  const body = modalContainer.querySelector('.modal-body');
+  const a = modalContainer.querySelector('a');
+  const {
+    title, link, description, id,
+  } = post;
+  const postEl = document.querySelector(`[data-id='${id}']`);
+  titleContainer.textContent = title;
+  body.textContent = description;
+  a.setAttribute('href', link);
+  postEl.classList.remove('fw-bold');
+  postEl.classList.add('fw-normal');
+};
+
 export default (i18nInstance, state) => {
   const watchedState = onChange(state, (path, current) => {
     const input = document.getElementById('url-input');
@@ -76,6 +89,7 @@ export default (i18nInstance, state) => {
     const feedback = document.querySelector('.feedback');
     const feedsContainer = document.querySelector('.feeds');
     const postsContainer = document.querySelector('.posts');
+    const modalContainer = document.querySelector('.modal-content');
     switch (path) {
       case 'form.errors':
         feedback.textContent = current;
@@ -88,25 +102,22 @@ export default (i18nInstance, state) => {
         feedback.textContent = i18nInstance.t('messages.successURL');
         if (feedback.classList.contains('text-danger')) {
           feedback.classList.remove('text-danger');
-        }
-        if (input.classList.contains('is-invalid')) {
           input.classList.remove('is-invalid');
         }
         break;
       case 'feeds':
         feedsContainer.textContent = '';
-        feedsContainer.append(
-          renderCard(i18nInstance.t('interface.feeds'), renderFeeds(current)),
-        );
+        feedsContainer.append(renderCard(i18nInstance.t('interface.feeds'), renderFeeds(current)));
         break;
       case 'posts':
         postsContainer.textContent = '';
-        postsContainer.append(
-          renderCard(i18nInstance.t('interface.posts'), renderPosts(current)),
-        );
+        postsContainer.append(renderCard(i18nInstance.t('interface.posts'), renderPosts(current, state.readPostsId)));
+        break;
+      case 'currentPost':
+        renderModal(current, modalContainer);
         break;
       default:
-        throw Error('nothing');
+        throw Error('unexpected Error');
     }
   });
   return watchedState;

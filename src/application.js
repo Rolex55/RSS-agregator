@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 import i18n from 'i18next';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { uniqueId } from 'lodash';
 import ru from './locales/ru';
 import view from './view';
@@ -9,14 +9,14 @@ import parseData from './parser';
 export default () => {
   const state = {
     form: {
-      state: 'filling',
       valid: true,
-      data: '',
       errors: '',
     },
     loadedURL: [],
     feeds: [],
     posts: [],
+    currentPost: {},
+    readPostsId: [],
   };
 
   const i18nInstance = i18n.createInstance();
@@ -61,7 +61,15 @@ export default () => {
     currState.posts.unshift(...feedPosts);
   };
 
-  const run = () => {
+  const catchDataErrors = (err) => {
+    if (err instanceof AxiosError) {
+      watchedState.form.errors = i18nInstance.t('messages.networkError');
+    } else if (err.message === 'parsingError') {
+      watchedState.form.errors = i18nInstance.t('messages.parsingError');
+    }
+  };
+
+  const update = () => {
     const links = state.loadedURL;
     if (links.length !== 0) {
       const titles = state.posts.map(({ title }) => title);
@@ -79,16 +87,26 @@ export default () => {
         .then((data) => data.filter((post) => !titles.includes(post.title)))
         .then((newPosts) => {
           watchedState.posts.unshift(...newPosts);
-        });
+        })
+        .catch((err) => catchDataErrors(err));
     }
-    setTimeout(run, 5000);
+    setTimeout(update, 5000);
   };
 
   const updatePosts = () => {
-    setTimeout(run, 5000);
+    setTimeout(update, 5000);
   };
 
   const schema = yup.string().required().url();
+
+  const postsDOM = document.querySelector('.posts');
+  postsDOM.addEventListener('click', (e) => {
+    const currId = e.target.dataset.id;
+    const { posts } = state;
+    const currPost = posts.find((post) => post.id === currId);
+    watchedState.currentPost = currPost;
+    state.readPostsId.unshift(currPost.id);
+  });
 
   const form = document.querySelector('form');
   form.addEventListener('submit', (e) => {
@@ -104,12 +122,12 @@ export default () => {
             addFeedsAndPosts(loadedData, watchedState);
             watchedState.loadedURL.push(validUrl);
           })
-          .catch((err) => {
-            watchedState.form.errors = err.message;
-          });
+          .catch((err) => catchDataErrors(err));
       })
       .catch((err) => {
-        [watchedState.form.errors] = err.errors;
+        if (err instanceof yup.ValidationError) {
+          [watchedState.form.errors] = err.errors;
+        }
       });
   });
 
