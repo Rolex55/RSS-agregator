@@ -73,18 +73,10 @@ export default () => {
     const links = state.loadedURL;
     if (links.length !== 0) {
       const titles = state.posts.map(({ title }) => title);
-
-      const initPromise = Promise.resolve([]);
-      const promise = links.reduce((acc, link) => {
-        const newAcc = acc.then((contents) => getData(link).then((data) => {
-          const allPosts = data.feedPosts;
-          return contents.concat(allPosts);
-        }));
-        return newAcc;
-      }, initPromise);
-
+      const updatedPosts = links.map((link) => getData(link).then((data) => data.feedPosts));
+      const promise = Promise.all(updatedPosts);
       promise
-        .then((data) => data.filter((post) => !titles.includes(post.title)))
+        .then((data) => data.flat().filter((post) => !titles.includes(post.title)))
         .then((newPosts) => {
           watchedState.posts.unshift(...newPosts);
         })
