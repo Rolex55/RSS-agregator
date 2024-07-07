@@ -46,8 +46,9 @@ export default () => {
 
   const getURL = (link) => `https://allorigins.hexlet.app/get?disableCache=true&url=${link}`;
 
-  const getData = (link) =>
-    axios.get(getURL(link)).then((response) => parseData(response.data.contents));
+  const getData = (link) => axios
+    .get(getURL(link))
+    .then((response) => parseData(response.data.contents));
 
   const addFeedsAndPosts = (data, currState) => {
     const feedId = uniqueId();
