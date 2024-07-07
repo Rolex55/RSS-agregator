@@ -46,9 +46,8 @@ export default () => {
 
   const getURL = (link) => `https://allorigins.hexlet.app/get?disableCache=true&url=${link}`;
 
-  const getData = (link) => axios
-    .get(getURL(link))
-    .then((response) => parseData(response.data.contents));
+  const getData = (link) =>
+    axios.get(getURL(link)).then((response) => parseData(response.data.contents));
 
   const addFeedsAndPosts = (data, currState) => {
     const feedId = uniqueId();
@@ -69,24 +68,23 @@ export default () => {
     }
   };
 
-  const update = () => {
-    const links = state.loadedURL;
-    if (links.length !== 0) {
-      const titles = state.posts.map(({ title }) => title);
-      const updatedPosts = links.map((link) => getData(link).then((data) => data.feedPosts));
-      const promise = Promise.all(updatedPosts);
-      promise
-        .then((data) => data.flat().filter((post) => !titles.includes(post.title)))
-        .then((newPosts) => {
-          watchedState.posts.unshift(...newPosts);
-        })
-        .catch((err) => catchDataErrors(err));
-    }
-    setTimeout(update, 5000);
-  };
-
-  const updatePosts = () => {
-    setTimeout(update, 5000);
+  const updatePosts = (interval = 5000) => {
+    const update = () => {
+      const links = state.loadedURL;
+      if (links.length !== 0) {
+        const titles = state.posts.map(({ title }) => title);
+        const updatedPosts = links.map((link) => getData(link).then((data) => data.feedPosts));
+        const promise = Promise.all(updatedPosts);
+        promise
+          .then((data) => data.flat().filter((post) => !titles.includes(post.title)))
+          .then((newPosts) => {
+            watchedState.posts.unshift(...newPosts);
+          })
+          .then(() => setTimeout(update, interval))
+          .catch((err) => catchDataErrors(err));
+      }
+    };
+    setTimeout(update, interval);
   };
 
   const schema = yup.string().required().url();
