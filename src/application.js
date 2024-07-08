@@ -88,7 +88,10 @@ export default () => {
     setTimeout(update, interval);
   };
 
-  const schema = yup.string().required().url();
+  const getSchema = (URLs) => {
+    const schema = yup.string().required().url().notOneOf(URLs);
+    return schema;
+  };
 
   const postsDOM = document.querySelector('.posts');
   postsDOM.addEventListener('click', (e) => {
@@ -104,8 +107,7 @@ export default () => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const url = formData.get('url');
-    schema
-      .notOneOf(watchedState.loadedURL)
+    getSchema(watchedState.loadedURL)
       .validate(url)
       .then((validUrl) => {
         getData(validUrl)
