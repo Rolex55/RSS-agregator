@@ -53,12 +53,13 @@ export default () => {
   const addFeedsAndPosts = (data, currState) => {
     const feedId = uniqueId();
     const { feedTitle, feedDescription, feedPosts } = data;
+    const postsWithId = feedPosts.map((post) => ({ ...post, id: uniqueId() }));
     currState.feeds.push({
       title: feedTitle,
       description: feedDescription,
       id: feedId,
     });
-    currState.posts.push(...feedPosts);
+    currState.posts.push(...postsWithId);
   };
 
   const catchDataErrors = (err) => {
