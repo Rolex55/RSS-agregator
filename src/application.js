@@ -3,7 +3,7 @@ import i18n from 'i18next';
 import axios, { AxiosError } from 'axios';
 import { uniqueId } from 'lodash';
 import ru from './locales/ru';
-import view from './view';
+import view, { interfaceElements } from './view';
 import parseData from './parser';
 
 export default () => {
@@ -94,8 +94,8 @@ export default () => {
     return schema;
   };
 
-  const postsDOM = document.querySelector('.posts');
-  postsDOM.addEventListener('click', (e) => {
+  const { postsContainer } = interfaceElements;
+  postsContainer.addEventListener('click', (e) => {
     const currId = e.target.dataset.id;
     const { posts } = state;
     const currPost = posts.find((post) => post.id === currId);
@@ -103,7 +103,7 @@ export default () => {
     state.readPostsId.push(currPost.id);
   });
 
-  const form = document.querySelector('form');
+  const { form } = interfaceElements;
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);

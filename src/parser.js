@@ -1,5 +1,3 @@
-import { uniqueId } from 'lodash';
-
 export default (data) => {
   const parser = new DOMParser();
   const domEl = parser.parseFromString(data, 'application/xml');
@@ -17,7 +15,6 @@ export default (data) => {
       title: postTitle,
       description: postDescription,
       link: postLink,
-      id: uniqueId(),
     };
   });
   return { feedTitle, feedDescription, feedPosts };

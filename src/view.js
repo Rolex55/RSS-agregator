@@ -1,5 +1,14 @@
 import onChange from 'on-change';
 
+export const interfaceElements = {
+  input: document.getElementById('url-input'),
+  form: document.querySelector('form'),
+  feedback: document.querySelector('.feedback'),
+  feedsContainer: document.querySelector('.feeds'),
+  postsContainer: document.querySelector('.posts'),
+  modalContainer: document.querySelector('.modal-content'),
+};
+
 const setAttributes = (element, options) => {
   Object.entries(options).forEach(([attr, value]) => {
     element.setAttribute(attr, value);
@@ -37,13 +46,19 @@ const renderPosts = (posts, readPostsId) => {
     const a = document.createElement('a');
     a.classList.add(readPostsId.includes(id) ? 'fw-normal' : 'fw-bold');
     setAttributes(a, {
-      href: link, 'data-id': id, target: '_blank', rel: 'noopener noreferrer',
+      href: link,
+      'data-id': id,
+      target: '_blank',
+      rel: 'noopener noreferrer',
     });
     a.textContent = title;
     const button = document.createElement('button');
     button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
     setAttributes(button, {
-      type: 'button', 'data-id': id, 'data-bs-toggle': 'modal', 'data-bs-target': '#modal',
+      type: 'button',
+      'data-id': id,
+      'data-bs-toggle': 'modal',
+      'data-bs-target': '#modal',
     });
     button.textContent = 'Просмотр';
     li.append(a);
@@ -84,12 +99,8 @@ const renderModal = (post, modalContainer) => {
 
 export default (i18nInstance, state) => {
   const watchedState = onChange(state, (path, current) => {
-    const input = document.getElementById('url-input');
-    const form = document.querySelector('form');
-    const feedback = document.querySelector('.feedback');
-    const feedsContainer = document.querySelector('.feeds');
-    const postsContainer = document.querySelector('.posts');
-    const modalContainer = document.querySelector('.modal-content');
+    const { input, form, feedback } = interfaceElements;
+    const { feedsContainer, postsContainer, modalContainer } = interfaceElements;
     switch (path) {
       case 'form.errors':
         feedback.textContent = current;
@@ -111,7 +122,9 @@ export default (i18nInstance, state) => {
         break;
       case 'posts':
         postsContainer.textContent = '';
-        postsContainer.append(renderCard(i18nInstance.t('interface.posts'), renderPosts(current, state.readPostsId)));
+        postsContainer.append(
+          renderCard(i18nInstance.t('interface.posts'), renderPosts(current, state.readPostsId)),
+        );
         break;
       case 'currentPost':
         renderModal(current, modalContainer);
