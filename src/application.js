@@ -72,16 +72,16 @@ export default () => {
           const links = state.loadedURL;
           if (links.length !== 0) {
             const titles = state.posts.map(({ title }) => title);
-            const updatedPosts = links
-              .map((link) => getData(link).then((data) => data.feedPosts))
-              .catch((err) => catchDataErrors(err));
+            const updatedPosts = links.map((link) => getData(link)
+              .then((data) => data.feedPosts)
+              .catch((err) => catchDataErrors(err)));
             const promise = Promise.all(updatedPosts);
             promise
               .then((data) => data.flat().filter((post) => !titles.includes(post.title)))
               .then((newPosts) => {
                 watchedState.posts.push(...newPosts);
               })
-              .then(() => setTimeout(update, interval));
+              .finally(() => setTimeout(update, interval));
           }
         };
         setTimeout(update, interval);
