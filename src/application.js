@@ -53,12 +53,12 @@ export default () => {
   const addFeedsAndPosts = (data, currState) => {
     const feedId = uniqueId();
     const { feedTitle, feedDescription, feedPosts } = data;
-    currState.feeds.unshift({
+    currState.feeds.push({
       title: feedTitle,
       description: feedDescription,
       id: feedId,
     });
-    currState.posts.unshift(...feedPosts);
+    currState.posts.push(...feedPosts);
   };
 
   const catchDataErrors = (err) => {
@@ -79,7 +79,7 @@ export default () => {
         promise
           .then((data) => data.flat().filter((post) => !titles.includes(post.title)))
           .then((newPosts) => {
-            watchedState.posts.unshift(...newPosts);
+            watchedState.posts.push(...newPosts);
           })
           .then(() => setTimeout(update, interval))
           .catch((err) => catchDataErrors(err));
@@ -96,7 +96,7 @@ export default () => {
     const { posts } = state;
     const currPost = posts.find((post) => post.id === currId);
     watchedState.currentPost = currPost;
-    state.readPostsId.unshift(currPost.id);
+    state.readPostsId.push(currPost.id);
   });
 
   const form = document.querySelector('form');
