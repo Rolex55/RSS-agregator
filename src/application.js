@@ -3,7 +3,7 @@ import i18n from 'i18next';
 import axios, { AxiosError } from 'axios';
 import { uniqueId } from 'lodash';
 import ru from './locales/ru';
-import view, { interfaceElements } from './view';
+import view from './view';
 import parseData from './parser';
 
 export default () => {
@@ -19,6 +19,15 @@ export default () => {
     readPostsId: [],
   };
 
+  const interfaceElements = {
+    input: document.getElementById('url-input'),
+    form: document.querySelector('form'),
+    feedback: document.querySelector('.feedback'),
+    feedsContainer: document.querySelector('.feeds'),
+    postsContainer: document.querySelector('.posts'),
+    modalContainer: document.querySelector('.modal-content'),
+  };
+
   const i18nInstance = i18n.createInstance();
   i18nInstance
     .init({
@@ -32,7 +41,7 @@ export default () => {
       document.querySelector('label').textContent = i18nInstance.t('interface.label');
       document.querySelector('.col-auto > button').textContent = i18nInstance.t('interface.button');
 
-      const watchedState = view(i18nInstance, state);
+      const watchedState = view(i18nInstance, state, interfaceElements);
       yup.setLocale({
         mixed: {
           notOneOf: i18nInstance.t('messages.existsURL'),
@@ -87,10 +96,7 @@ export default () => {
         setTimeout(update, interval);
       };
 
-      const getSchema = (URLs) => {
-        const schema = yup.string().required().url().notOneOf(URLs);
-        return schema;
-      };
+      const getSchema = (URLs) => yup.string().required().url().notOneOf(URLs);
 
       const { postsContainer } = interfaceElements;
       postsContainer.addEventListener('click', (e) => {
